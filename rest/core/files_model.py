@@ -1,0 +1,24 @@
+import uuid
+from datetime import datetime
+
+from sqlalchemy import Column, String, DATETIME, INTEGER
+from business import Base
+
+
+class FilesModel(Base):
+    __tablename__ = 'files'
+    __table_args__ = {'schema': 'public'}
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    minio_address = Column(String, nullable=False)
+    minio_thumbnail_address = Column(String)
+    width = Column(INTEGER)
+    height = Column(INTEGER)
+    tn_width = Column(INTEGER)
+    tn_height = Column(INTEGER)
+    file_size = Column(INTEGER, nullable=False)
+    file_name = Column(String, nullable=False)
+    file_extension = Column(String)
+    file_description = Column(String)
+    created_on = Column(DATETIME, default=datetime.now())
+    updated_on = Column(DATETIME, default=datetime.now(), onupdate=datetime.now())
