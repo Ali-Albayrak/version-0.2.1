@@ -1,0 +1,12 @@
+provider: gcp
+database:
+  version: '15'
+  connection: 
+    host: localhost
+    user: postgres
+    password : '123456'
+    database : 'version_0_2_1'
+    port: 6500
+    ssl: 0
+
+

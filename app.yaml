@@ -1,0 +1,18 @@
+id: new_version_02
+schemaVersion: 0.1
+
+app:
+  name: new_version
+  provider: rest
+  version: 0.1
+
+actions:
+  _ref: actions.yaml
+
+data:
+  _ref: data.yaml
+
+generate:
+  - rest
+
+

@@ -1,0 +1,143 @@
+team:
+  plural: teams
+  permissions:
+    list:
+      - admin
+    create:
+      - admin
+    get:
+      - admin
+      - user
+    update:
+      - admin
+    del:
+      - admin
+
+  fields:
+    - field_type: text
+      name: name
+      required: true
+      options:
+        max: 200
+        min: 2
+        strip: true
+    - field_type: text
+      name: location
+      required: true
+      options:
+        strip: true
+    - field_type: text
+      name: short_name
+      required: true
+    - field_type: text
+      name: bio
+    - field_type: rel
+      name: owner
+      options:
+        parent: $user
+    - field_type: rel
+      name: player
+      options:
+        children: players
+  # unique:
+  #   - [name, location]
+  # index:
+  #   - short_name
+  triggers:
+    post_create:
+      - create_player_for_team
+
+
+player:
+  plural: players
+  permissions:
+    list:
+      - admin
+      - manager
+      - user
+    create:
+      - manager
+    get:
+      - admin
+      - manager
+      - user
+    update:
+      - admin
+      - manager
+    del:
+      - manager
+  fields:
+    - field_type: text
+      name: name
+    - field_type: text
+      name: short_name
+    - field_type: select
+      name: position
+      options:
+        options:
+          - goalkeeper
+          - defense
+          - Midfielder
+          - Forward
+          - staff
+        type: text
+    - field_type: boolean
+      name: is_active
+    - field_type: rel
+      name: team
+      options:
+        parent: teams
+
+
+stadium:
+  plural: stadiums
+  permissions:
+    list:
+      - admin
+      - manager
+      - user
+    create:
+      - admin
+    get:
+      - admin
+      - manager
+      - user
+    update:
+      - admin
+    del:
+      - admin
+  fields:
+    - field_type: text
+      name: name
+    - field_type: text
+      name: location
+    - field_type: select
+      name: type
+      options:
+        options:
+          - covered
+          - open
+        type: text
+    - field_type: integer
+      name: capacity
+    - field_type: phone
+      name: phone_number
+    - field_type: image
+      name: profile_image
+    - field_type: file
+      name: licine_file
+    - field_type: json
+      name: family
+    - field_type: array
+      name: preivous_teams
+      options:
+        array_of: text
+        max: 5
+    - field_type: date
+      name: birthdate
+    - field_type: timestamp
+      name: application_time
+  unique:
+    - [name, location]
+  index:
+    - name

@@ -1,0 +1,138 @@
+# -------------- temp solution yaml file to handle users while migrating zestudio db --------------
+
+# !Deployment
+# stage: dev
+# registry: us.gcr.io/zekoder-dev-349809
+# nameOverride: ''
+# fullnameOverride: ''
+# stages:
+#   dev: !Stage
+#     podSecurityContext: {}
+#     replicas: 1
+#     registery: us.gcr.io/zekoder-dev-349809
+#     imagePullPolicy: Always
+
+solution:
+  name: zestudio
+  provider: zekoder
+  version: 0.1
+  domain: "zekoder.net"
+  ip: "new_zestudio-cyberneticlabs-zekoder-net"
+  database: !Database
+    name: zekoder
+    host: 35.184.231.146
+    port: '5432'
+    ssl: true
+apps:
+- !App
+  provider: zekoder
+  name: zeauth
+  image: us.gcr.io/zekoder-dev-349809/zekoder/zeauth:dev
+  version: ''
+  database: !DatabaseSecrets
+    driver: postgresql+psycopg2
+    schema: public
+    username: zekoder_zeauth
+    password: D4cdDkNkDe
+  # env:
+  #   AUTH_PROVIDER: FUSIONAUTH
+  #   MAIL_FROM: noreply@zekoder.zekoder.us
+  #   MAIL_PASSWORD: BNbJK7xOWByxwHX4k3d1di/gjaVv9qaQr2XkTV5kKYZW
+  #   MAIL_PORT: '587'
+  #   MAIL_SERVER: email-smtp.eu-central-1.amazonaws.com
+  #   MAIL_USERNAME: AKIAWA3RKI66PIK3AQSO
+  #   STR_ENCRYPT_DECRYPT_KEY: ANpYasKKpHA3D9JNTNtntJhL03W3ttzC8YT2OuyQa7A=
+  #   JWT_SECRET_KEY: /B?D(G+KbPeShVmYq3t6w9z$C&F)H@Mc
+  #   ACCESS_TOKEN_EXPIRY_MINUTES: '60'
+  #   REFRESH_TOKEN_EXPIRY_MINUTES: '60'
+  #   REDIS_PORT: '6379'
+  #   REDIS_HOST: 34.68.146.199
+  #   REDIS_PASSWORD: pyG91wKKQX
+  #   REDIS_KEY_PREFIX: zekoder
+  #   DEFAULT_ADMIN_EMAIL: zekoder-zeauth@zekoder.us
+  #   DEFAULT_ADMIN_PASSWORD: '&al8vtnlJWgbdgm8GLTW1'
+  #   CLIENT_TOKEN_EXPIRY_MINUTES: '30'
+  #   REFRESH_CLIENT_TOKEN_EXPIRY_MINUTES: '60'
+  #   NOTIFICATION_PROVIDER: 7753daf8-dcaf-4bb2-92b1-a2e7d0af5def
+  #   RESET_PASSWORD_URL: https://elinkta.linx.zekoder.us
+  #   RESEND_CONFIRMATION_EMAIL_URL: https://elinkta.linx.zekoder.us
+  #   SEND_NOTIFICATION_EMAIL_URL: http://zekoder-zenotify-service-service.elinkta-dev.svc.cluster.local:8080
+  #   ZENOTIFY_BASE_URL: https://api.zenotify.zekoder.elinkta.linx.zekoder.us
+  # labels:
+  # - zeauth
+  # - data
+  # - ingress
+- !App
+  provider: zekoder
+  name: zecommons
+  image: us.gcr.io/zekoder-dev-349809/zekoder/zecommons:dev
+  version: ''
+  database: !DatabaseSecrets
+    driver: postgresql+psycopg2
+    schema: public
+    username: zekoder_zeauth
+    password: D4cdDkNkDe
+  # env:
+  #   MINIO_BUCKET_NAME: zeagent-92ff60ddf6eb48aabadb3c90b34441e4
+  #   MINIO_ACCESS_KEY: 2edofgcyptjN6OhLf
+  #   MINIO_SECRET_KEY: MYT7F50OOlQLspdq2N68bUCXK7H1lEdgzpXFA
+  #   MINIO_HOST: zk-minio-service.zk-core.svc.cluster.local:9000
+  #   ALLOWED_EXT: jpg,tiff,png,jpeg,pkl,json,docx,env,yaml
+  # labels:
+  # - zecommons
+  # - data
+  # - ingress
+- !App
+  provider: zekoder
+  name: zenotify
+  image: ''
+  version: '0.36'
+  database: !DatabaseSecrets
+    driver: postgresql+psycopg2
+    schema: zekoder_zenotify
+    username: zekoder_zenotify
+    password: N6nyFiMkbP
+  # env:
+  #   ZEAUTH_URI: https://api.zeauth.zekoder.elinkta.linx.zekoder.us
+  # labels:
+  # - zenotify
+  # - data
+  # - ingress
+- !App
+  provider: zekoder
+  name: zenotify-service
+  image: us.gcr.io/zekoder-dev-349809/zekoder/zenotify/service:0.36
+  version: '0.36'
+  database: !DatabaseSecrets
+    driver: postgresql+psycopg2
+    schema: ''
+    username:
+    password:
+  # env:
+  #   GET_PROVIDERS_ENDPOINT: https://api.zenotify.zekoder.elinkta.linx.zekoder.us/providers/?page=1&size=20
+  #   GENRATE_PROVIDERS_ENDPOINT: https://api.zenotify.zekoder.elinkta.linx.zekoder.us/providers/
+  #   GET_NOTIFICATION_ENDPOINT: 
+  #     https://api.zenotify.zekoder.elinkta.linx.zekoder.us/notifications/notification_id?notification_id=
+  #   SOLUTION_EMAIL: admin@zekoder.us
+  # labels:
+  # - zenotify-service
+  # - data
+- !App
+  provider: zekoder
+  name: zestudio
+  image: ''
+  # version: 5.4
+  database: !DatabaseSecrets
+    driver: postgresql+psycopg2
+    schema: zekoder_zestudio
+    username: app_zestudio_user
+    password: N6nyFiMkPb
+  # env: 
+  #   ZEAUTH_URI: https://api.zeauth.zekoder.elinkta.linx.zekoder.us
+  # labels:
+  # - data
+  # - ingress
+# service: !Service
+#   port: 8080
+# ingress: !Ingress
+#   enabled: true
