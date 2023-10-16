@@ -11,6 +11,7 @@ from sqlalchemy.orm import relationship
 from core.base_model import BaseModel
 from core.manager import Manager
 from fastapi import HTTPException
+from sqlalchemy.dialects.postgresql import UUID
 
 
 
@@ -37,8 +38,8 @@ class PlayerModel(BaseModel):
     is_active = Column(BOOLEAN, nullable=True, default=True)
     
     
-    team = Column(String, ForeignKey(os.environ.get('DEFAULT_SCHEMA', 'public') + ".teams.id"))
-    team__details = relationship("TeamModel", back_populates='players')
+    team = Column(UUID(as_uuid=True), ForeignKey(os.environ.get('DEFAULT_SCHEMA', 'public') + ".teams.id"))
+    team__details = relationship("TeamModel", back_populates='players', lazy='subquery')
     
     @classmethod
     def objects(cls, session):
