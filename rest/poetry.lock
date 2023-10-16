@@ -70,6 +70,18 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "asyncpg"
+version = "0.28.0"
+description = "An asyncio PostgreSQL driver"
+category = "main"
+optional = false
+python-versions = ">=3.7.0"
+
+[package.extras]
+docs = ["Sphinx (>=5.3.0,<5.4.0)", "sphinxcontrib-asyncio (>=0.3.0,<0.4.0)", "sphinx-rtd-theme (>=1.2.2)"]
+test = ["flake8 (>=5.0,<6.0)", "uvloop (>=0.15.3)"]
+
+[[package]]
 name = "attrs"
 version = "23.1.0"
 description = "Classes Without Boilerplate"
@@ -200,12 +212,16 @@ optional = false
 python-versions = ">=3.8"
 
 [[package]]
-name = "funcy"
-version = "2.0"
-description = "A fancy and practical functional tools"
+name = "greenlet"
+version = "3.0.0"
+description = "Lightweight in-process concurrent programming"
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=3.7"
+
+[package.extras]
+docs = ["sphinx"]
+test = ["objgraph", "psutil"]
 
 [[package]]
 name = "grpcio"
@@ -227,6 +243,44 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "httpcore"
+version = "0.18.0"
+description = "A minimal low-level HTTP client."
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+anyio = ">=3.0,<5.0"
+certifi = "*"
+h11 = ">=0.13,<0.15"
+sniffio = ">=1.0.0,<2.0.0"
+
+[package.extras]
+http2 = ["h2 (>=3,<5)"]
+socks = ["socksio (>=1.0.0,<2.0.0)"]
+
+[[package]]
+name = "httpx"
+version = "0.25.0"
+description = "The next generation HTTP client."
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+certifi = "*"
+httpcore = ">=0.18.0,<0.19.0"
+idna = "*"
+sniffio = "*"
+
+[package.extras]
+brotli = ["brotli", "brotlicffi"]
+cli = ["click (>=8.0.0,<9.0.0)", "pygments (>=2.0.0,<3.0.0)", "rich (>=10,<14)"]
+http2 = ["h2 (>=3,<5)"]
+socks = ["socksio (>=1.0.0,<2.0.0)"]
+
+[[package]]
 name = "idna"
 version = "3.4"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -236,15 +290,21 @@ python-versions = ">=3.5"
 
 [[package]]
 name = "mongosql"
-version = "2.0.15.post1"
+version = "2.0.15-1"
 description = "A JSON query engine with SqlAlchemy as a back-end"
 category = "main"
 optional = false
-python-versions = ">=3.6,<4.0"
+python-versions = "^3.6"
+develop = false
 
 [package.dependencies]
-nplus1loader = ">=1.0,<2.0"
-sqlalchemy = ">=1.2,<1.2.9 || >1.2.9,<1.4"
+sqlalchemy = "^1.2, !=1.2.9"
+
+[package.source]
+type = "git"
+url = "https://github.com/Ali-Albayrak/My-Mongosql.git"
+reference = "master"
+resolved_reference = "4a106a538963fa1cde6f4c5f5b549582eebe9a66"
 
 [[package]]
 name = "multidict"
@@ -253,18 +313,6 @@ description = "multidict implementation"
 category = "main"
 optional = false
 python-versions = ">=3.7"
-
-[[package]]
-name = "nplus1loader"
-version = "1.0.1"
-description = "SqlAlchemy N+1 Loader: a solution to the N+1 problem"
-category = "main"
-optional = false
-python-versions = ">= 3.6"
-
-[package.dependencies]
-funcy = "*"
-sqlalchemy = ">=1.3.0"
 
 [[package]]
 name = "protobuf"
@@ -310,6 +358,17 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
 six = ">=1.5"
 
 [[package]]
+name = "python-dotenv"
+version = "1.0.0"
+description = "Read key-value pairs from a .env file and set them as environment variables"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.extras]
+cli = ["click (>=5.0)"]
+
+[[package]]
 name = "requests"
 version = "2.28.2"
 description = "Python HTTP for Humans."
@@ -345,23 +404,35 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "sqlalchemy"
-version = "1.3.24"
+version = "1.4.49"
 description = "Database Abstraction Library"
 category = "main"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7"
+
+[package.dependencies]
+greenlet = {version = "!=0.4.17", markers = "python_version >= \"3\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\")"}
 
 [package.extras]
+aiomysql = ["greenlet (!=0.4.17)", "aiomysql"]
+aiosqlite = ["typing_extensions (!=3.10.0.1)", "greenlet (!=0.4.17)", "aiosqlite"]
+asyncio = ["greenlet (!=0.4.17)"]
+asyncmy = ["greenlet (!=0.4.17)", "asyncmy (>=0.2.3,!=0.2.4)"]
+mariadb_connector = ["mariadb (>=1.0.1,!=1.1.2)"]
 mssql = ["pyodbc"]
 mssql_pymssql = ["pymssql"]
 mssql_pyodbc = ["pyodbc"]
-mysql = ["mysqlclient"]
-oracle = ["cx-oracle"]
-postgresql = ["psycopg2"]
-postgresql_pg8000 = ["pg8000 (<1.16.6)"]
+mypy = ["sqlalchemy2-stubs", "mypy (>=0.910)"]
+mysql = ["mysqlclient (>=1.4.0,<2)", "mysqlclient (>=1.4.0)"]
+mysql_connector = ["mysql-connector-python"]
+oracle = ["cx_oracle (>=7,<8)", "cx_oracle (>=7)"]
+postgresql = ["psycopg2 (>=2.7)"]
+postgresql_asyncpg = ["greenlet (!=0.4.17)", "asyncpg"]
+postgresql_pg8000 = ["pg8000 (>=1.16.6,!=1.29.0)"]
 postgresql_psycopg2binary = ["psycopg2-binary"]
 postgresql_psycopg2cffi = ["psycopg2cffi"]
 pymysql = ["pymysql (<1)", "pymysql"]
+sqlcipher = ["sqlcipher3-binary"]
 
 [[package]]
 name = "starlette"
@@ -430,7 +501,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "597af57d3aca256550a38b6ffb4b9eb50b5a9eb7267ade8d5394ec5902c6cb69"
+content-hash = "c02cfde92caed5e84cea241d0499a04afbe4343d011310105c22aa589e0d57b9"
 
 [metadata.files]
 aiohttp = []
@@ -438,6 +509,7 @@ aiosignal = []
 anyio = []
 asgiref = []
 async-timeout = []
+asyncpg = []
 attrs = []
 certifi = []
 charset-normalizer = []
@@ -449,17 +521,19 @@ email-validator = []
 exceptiongroup = []
 fastapi = []
 frozenlist = []
-funcy = []
+greenlet = []
 grpcio = []
 h11 = []
+httpcore = []
+httpx = []
 idna = []
 mongosql = []
 multidict = []
-nplus1loader = []
 protobuf = []
 psycopg2-binary = []
 pydantic = []
 python-dateutil = []
+python-dotenv = []
 requests = []
 six = []
 sniffio = []
