@@ -17,11 +17,13 @@ class Manager:
     def __str__(self):
         return "%s_%s" % (self.__class__.__name__, self.Model.__name__)
 
-    async def __len__(self): ################
-        return await self.__fetch().count()
+    async def __len__(self):
+        r = await self.__fetch()
+        return len(r.scalars().all())
 
     async def __iter__(self):
-        for obj in await self.__fetch():
+        r = await self.__fetch()
+        for obj in r.scalars().all():
             yield obj
 
     def __getitem__(self, item):
