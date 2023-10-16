@@ -8,7 +8,7 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
 
-from business import db_session
+from business import db_async_session, db_sync_session
 from core.logger import log
 
 auth_schema = HTTPBearer()
@@ -16,10 +16,26 @@ zeauth_url = os.environ.get('ZEAUTH_URI', 'https://zekoder-zeauth-dev-25ahf2meja
 user_session: ContextVar[str] = ContextVar('user_session', default=None)
 user_roles: ContextVar[list] = ContextVar('user_roles', default=[])
 
+async def get_async_db():
+    async with db_async_session() as db:
+        try:
+            # set session variables
+            await db.execute(f"SET zekoder.id = '{current_user_uuid()}'")
+            await db.execute(f"SET zekoder.roles = '{','.join(current_user_roles())}'")
 
-def get_db():
-    db = db_session()
+            yield db
+        # except ConnectionRefusedError as e:
+        #     log.debug(f"error: {e.args[-1]}")
+        #     raise HTTPException(503, e.args)
+        finally:
+            await db.close()
+
+def get_sync_db():
+    db = db_sync_session()
     try:
+        # set session variables
+        db.execute(f"SET zekoder.id = '{current_user_uuid()}'")
+        db.execute(f"SET zekoder.roles = '{','.join(current_user_roles())}'")
         yield db
     finally:
         db.close()
@@ -33,7 +49,7 @@ class CommonDependencies:
 
 
 class Protect:
-    def __init__(self, token: str = Depends(auth_schema), db: Session = Depends(get_db)) -> None:
+    def __init__(self, token: str = Depends(auth_schema), db: Session = Depends(get_async_db)) -> None:
         self.credentials = token.credentials
         self.db = db
 

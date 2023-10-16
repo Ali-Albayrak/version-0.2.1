@@ -3,13 +3,14 @@ from typing import Union, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, Query as QueryParam
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession 
 from sqlalchemy.exc import IntegrityError
 from starlette.status import HTTP_204_NO_CONTENT
 
 from business.players_schema import *
 from business.players_model import PlayerModel
 
-from core.depends import CommonDependencies, get_db, Protect, zeauth_url
+from core.depends import CommonDependencies, get_async_db, get_sync_db, Protect, zeauth_url
 from core.logger import log
 from core.query import *
 
@@ -21,10 +22,10 @@ router = APIRouter()
 
 # list players
 @router.get('/', tags=['players'], status_code=200, response_model=ReadPlayers)
-async def list(request: Request, token: str = Depends(Protect), db: Session = Depends(get_db), commons: CommonDependencies = Depends(CommonDependencies)):
+async def list(request: Request, token: str = Depends(Protect), db: AsyncSession = Depends(get_async_db), commons: CommonDependencies = Depends(CommonDependencies)):
     token.auth(['admin', 'manager', 'user'])
     try:
-        r = PlayerModel.objects(db).all(offset=commons.offset, limit=commons.size)
+        r = await PlayerModel.objects(db).all(offset=commons.offset, limit=commons.size)
         return {
             'data': r,
             'page_size': commons.size,
@@ -39,10 +40,10 @@ list.__doc__ = f" List players".expandtabs()
 
 # get player
 @router.get('/player_id', tags=['players'], response_model=ReadPlayer)
-async def get(request: Request, player_id: str, db: Session = Depends(get_db), token: str = Depends(Protect)):
+async def get(request: Request, player_id: str, db: AsyncSession = Depends(get_async_db), token: str = Depends(Protect)):
     token.auth(['admin', 'manager', 'user'])
     try:
-        result = PlayerModel.objects(db).get(id=player_id)
+        result = await PlayerModel.objects(db).get(id=player_id)
         if result:
             return result
         else:
@@ -61,7 +62,7 @@ get.__doc__ = f" Get a specific player by its id".expandtabs()
 
 # query player
 @router.post('/q', tags=['players'], status_code=200)
-async def query(q: QuerySchema, db: Session = Depends(get_db), token: str = Depends(Protect)):
+async def query(q: QuerySchema, db: Session = Depends(get_sync_db), token: str = Depends(Protect)):
     token.auth(['admin', 'manager', 'user'])
     try:
         size = q.limit if q.limit else 20
@@ -92,7 +93,7 @@ async def query(q: QuerySchema, db: Session = Depends(get_db), token: str = Depe
 
 # create player
 @router.post('/', tags=['players'], status_code=201, response_model=ReadPlayer)
-async def create(request: Request, player: CreatePlayer, db: Session = Depends(get_db), token: str = Depends(Protect)):
+async def create(request: Request, player: CreatePlayer, db: AsyncSession = Depends(get_async_db), token: str = Depends(Protect)):
     token.auth(['manager']) 
     try:
         new_data = player.dict()
@@ -105,12 +106,12 @@ async def create(request: Request, player: CreatePlayer, db: Session = Depends(g
                 "well_known_urls": {"zeauth": zeauth_url, "self": str(request.base_url)}
             }
         }
-        new_player = PlayerModel.objects(db).create(**kwargs)
+        new_player = await PlayerModel.objects(db).create(**kwargs)
         return new_player
     except HTTPException as e:
         raise e
     except IntegrityError as e:
-        raise HTTPException(422, e.orig.pgerror)
+        raise HTTPException(422, e.orig.args[-1])
     except Exception as e:
         log.debug(e)
         raise HTTPException(500, f"creation of new player failed")
@@ -120,7 +121,7 @@ create.__doc__ = f" Create a new player".expandtabs()
 
 # create multiple players
 @router.post('/add-players', tags=['players'], status_code=201, response_model=List[ReadPlayer])
-async def create_multiple_players(request: Request, players: List[CreatePlayer], db: Session = Depends(get_db), token: str = Depends(Protect)):
+async def create_multiple_players(request: Request, players: List[CreatePlayer], db: AsyncSession = Depends(get_async_db), token: str = Depends(Protect)):
     token.auth(['manager']) 
     new_items, errors_info = [], []
     try:
@@ -136,17 +137,17 @@ async def create_multiple_players(request: Request, players: List[CreatePlayer],
                         "well_known_urls": {"zeauth": zeauth_url, "self": str(request.base_url)}
                     }
                 }
-                new_players = PlayerModel.objects(db).create(only_add=True, **kwargs)
+                new_players = await PlayerModel.objects(db).create(only_add=True, **kwargs)
                 new_items.append(new_players)
             except HTTPException as e:
                 errors_info.append({"index": player_index, "errors": e.detail})
 
-        db.commit()
+        # db.commit()
         return new_items
     except HTTPException as e:
         raise e
     except IntegrityError as e:
-        raise HTTPException(422, e.orig.pgerror)
+        raise HTTPException(422, e.orig.args[-1])
     except Exception as e:
         log.debug(e)
         raise HTTPException(500, f"creation of new players failed")
@@ -156,7 +157,7 @@ create.__doc__ = f" Create multiple new players".expandtabs()
 
 # upsert multiple players
 @router.post('/upsert-multiple-players', tags=['players'], status_code=201, response_model=List[ReadPlayer])
-async def upsert_multiple_players(request: Request, players: List[UpsertPlayer], db: Session = Depends(get_db), token: str = Depends(Protect)):
+async def upsert_multiple_players(request: Request, players: List[UpsertPlayer], db: AsyncSession = Depends(get_async_db), token: str = Depends(Protect)):
     token.auth(['manager'])
     new_items, errors_info = [], []
     try:
@@ -173,24 +174,24 @@ async def upsert_multiple_players(request: Request, players: List[UpsertPlayer],
                     }
                 }
                 if new_data['id']:
-                    old_data = PlayerModel.objects(db).get(id=new_data['id'])
+                    old_data = await PlayerModel.objects(db).get(id=new_data['id'])
                     kwargs['signal_data']['old_data'] = old_data.__dict__ if old_data else {}
 
-                    PlayerModel.objects(db).update(obj_id=new_data['id'], **kwargs)
-                    updated_deployments = PlayerModel.objects(db).get(id=new_data['id'])
+                    await PlayerModel.objects(db).update(obj_id=new_data['id'], **kwargs)
+                    updated_deployments = await PlayerModel.objects(db).get(id=new_data['id'])
                     new_items.append(updated_deployments)
                 else:
-                    new_players = PlayerModel.objects(db).create(only_add=True, **kwargs)
+                    new_players = await PlayerModel.objects(db).create(only_add=True, **kwargs)
                     new_items.append(new_players)
             except HTTPException as e:
                 errors_info.append({"index": player_index, "errors": e.detail})
 
-        db.commit()
+        # db.commit()
         return new_items
     except HTTPException as e:
         raise e
     except IntegrityError as e:
-        raise HTTPException(422, e.orig.pgerror)
+        raise HTTPException(422, e.orig.args[-1])
     except Exception as e:
         log.debug(e)
         raise HTTPException(500, f"upsert multiple players failed")
@@ -200,10 +201,10 @@ upsert_multiple_players.__doc__ = f" upsert multiple players".expandtabs()
 
 # update player
 @router.put('/player_id', tags=['players'], status_code=201)
-async def update(request: Request, player_id: Union[str, int], player: CreatePlayer, db: Session = Depends(get_db), token: str = Depends(Protect)):
+async def update(request: Request, player_id: Union[str, int], player: CreatePlayer, db: AsyncSession = Depends(get_async_db), token: str = Depends(Protect)):
     token.auth(['admin', 'manager'])
     try:
-        old_data = PlayerModel.objects(db).get(id=player_id)
+        old_data = await PlayerModel.objects(db).get(id=player_id)
         new_data = player.dict(exclude_unset=True)
         kwargs = {
             "model_data": new_data,
@@ -214,13 +215,13 @@ async def update(request: Request, player_id: Union[str, int], player: CreatePla
                 "well_known_urls": {"zeauth": zeauth_url, "self": str(request.base_url)}
             }
         }
-        PlayerModel.objects(db).update(obj_id=player_id, **kwargs)
-        result = PlayerModel.objects(db).get(id=player_id)
+        await PlayerModel.objects(db).update(obj_id=player_id, **kwargs)
+        result = await PlayerModel.objects(db).get(id=player_id)
         return result
     except HTTPException as e:
         raise e
     except IntegrityError as e:
-        raise HTTPException(422, e.orig.pgerror)
+        raise HTTPException(422, e.orig.args[-1])
     except Exception as e:
         log.debug(e)
         raise HTTPException(500, "failed updating session with id <{session_id}>")
@@ -230,7 +231,7 @@ update.__doc__ = f" Update a player by its id and payload".expandtabs()
 
 # delete player
 @router.delete('/player_id', tags=['players'], status_code=HTTP_204_NO_CONTENT, response_class=Response)
-async def delete(request: Request, player_id: Union[str, int], db: Session = Depends(get_db), token: str = Depends(Protect)):
+async def delete(request: Request, player_id: Union[str, int], db: AsyncSession = Depends(get_async_db), token: str = Depends(Protect)):
     token.auth(['manager'])
     try:
         kwargs = {
@@ -242,7 +243,7 @@ async def delete(request: Request, player_id: Union[str, int], db: Session = Dep
                 "well_known_urls": {"zeauth": zeauth_url, "self": str(request.base_url)}
             }
         }
-        PlayerModel.objects(db).delete(obj_id=player_id, **kwargs)
+        await PlayerModel.objects(db).delete(obj_id=player_id, **kwargs)
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail={
                 "field_name": "{player_id}",
@@ -257,7 +258,7 @@ delete.__doc__ = f" Delete a player by its id".expandtabs()
 
 # delete multiple players
 @router.delete('/delete-players', tags=['players'], status_code=HTTP_204_NO_CONTENT, response_class=Response)
-async def delete_multiple_players(request: Request, players_id: List[str] = QueryParam(), db: Session = Depends(get_db), token: str = Depends(Protect)):
+async def delete_multiple_players(request: Request, players_id: List[str] = QueryParam(), db: AsyncSession = Depends(get_async_db), token: str = Depends(Protect)):
     token.auth(['manager'])
     kwargs = {
         "model_data": {},
@@ -268,6 +269,6 @@ async def delete_multiple_players(request: Request, players_id: List[str] = Quer
             "well_known_urls": {"zeauth": zeauth_url, "self": str(request.base_url)}
         }
     }
-    PlayerModel.objects(db).delete_multiple(obj_ids=players_id, **kwargs)
+    await PlayerModel.objects(db).delete_multiple(obj_ids=players_id, **kwargs)
 
 delete.__doc__ = f" Delete multiple players by list of ids".expandtabs()

@@ -125,7 +125,7 @@ stadium:
     - field_type: image
       name: profile_image
     - field_type: file
-      name: licine_file
+      name: license_file
     - field_type: json
       name: family
     - field_type: array

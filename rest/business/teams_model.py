@@ -11,15 +11,16 @@ from sqlalchemy.orm import relationship
 from core.base_model import BaseModel
 from core.manager import Manager
 from fastapi import HTTPException
+from sqlalchemy.dialects.postgresql import UUID
 
 class CustomManager(Manager):
 
-    def post_save(self, **kwargs) -> dict:
+    async def post_save(self, **kwargs) -> dict:
         jwt = kwargs.get("jwt", {})
         new_data = kwargs.get("new_data", {})
         old_data = kwargs.get("old_data", {})
         well_known_urls = kwargs.get("well_known_urls", {})
-        new_data = create_player_for_team.handler(jwt=jwt, new_data=new_data, old_data=old_data, well_known_urls=well_known_urls, method="create")
+        new_data = await create_player_for_team.handler(jwt=jwt, new_data=new_data, old_data=old_data, well_known_urls=well_known_urls, method="create")
         return new_data
 
 
@@ -44,10 +45,10 @@ class TeamModel(BaseModel):
     bio = Column(Text, nullable=True, default=None)
     
     
-    owner = Column(String, ForeignKey("public.users.id"))
+    owner = Column(UUID(as_uuid=True), ForeignKey("public.users.id"))
 
          
-    players = relationship('PlayerModel', back_populates='team__details')
+    players = relationship('PlayerModel', back_populates='team__details', lazy='subquery')
     
     @classmethod
     def objects(cls, session):
