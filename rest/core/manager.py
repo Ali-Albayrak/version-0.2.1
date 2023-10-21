@@ -3,7 +3,7 @@ from core.logger import log
 from sqlalchemy.ext.asyncio import AsyncSession 
 from sqlalchemy import select, delete, update, insert
 
-from core.depends import get_async_db
+from core.depends import current_user_roles, current_user_uuid, get_async_db
 
 class Manager:
 
@@ -13,17 +13,27 @@ class Manager:
         self.db = database
         self.Model = model
         self._query = {}  # Instantiate a query, update it on get/filter call
+    
+    async def set_session_vars(self):
+        await self.db.execute(f"SET zekoder.id = '{current_user_uuid()}'")
+        await self.db.execute(f"SET zekoder.roles = '{','.join(current_user_roles())}'")
+
+    @classmethod
+    async def async_init(cls, model, database: AsyncSession):
+        obj = cls(model,database)
+        await obj.set_session_vars()
+        return obj
 
     def __str__(self):
         return "%s_%s" % (self.__class__.__name__, self.Model.__name__)
 
     async def __len__(self):
-        r = await self.__fetch()
-        return len(r.scalars().all())
+        data = await self.__fetch()
+        return len(data.scalars().all())
 
     async def __iter__(self):
-        r = await self.__fetch()
-        for obj in r.scalars().all():
+        data = await self.__fetch()
+        for obj in data.scalars().all():
             yield obj
 
     def __getitem__(self, item):
@@ -37,8 +47,8 @@ class Manager:
 
     async def get(self, **query):
         self.update_query(query)
-        r = await self.__fetch()
-        return r.scalars().first()
+        data = await self.__fetch()
+        return data.scalars().first()
 
     def filter(self, **query):
         self.update_query(query)
@@ -124,6 +134,6 @@ class Manager:
 
     async def all(self, offset: int = 0, limit: int = 10, **query):
         self.update_query(query)
-        r = await self.__fetch()
-        r = r.scalars().all()
-        return r[offset*limit:(offset+1)*limit]
+        data = await self.__fetch()
+        data = data.scalars().all()
+        return data[offset*limit:(offset+1)*limit]
