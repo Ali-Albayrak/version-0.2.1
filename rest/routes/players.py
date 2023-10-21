@@ -180,7 +180,7 @@ async def upsert_multiple_players(request: Request, players: List[UpsertPlayer],
                 if new_data['id']:
                     obj = await PlayerModel.objects(db)
                     old_data = await obj.get(id=new_data['id'])
-                    kwargs['signal_data']['old_data'] = old_data.__dict__ if old_data else {}
+                    kwargs['signal_data']['old_data'] = dict(old_data.__dict__) if old_data else {}
 
                     obj = await PlayerModel.objects(db)
                     updated_deployments = await obj.update(obj_id=new_data['id'], **kwargs)
