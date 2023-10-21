@@ -45,8 +45,10 @@ class StadiumModel(BaseModel):
     birthdate = Column(DATE, nullable=True, default=None)
 
     @classmethod
-    def objects(cls, session):
-        return Manager(cls, session)
+    async def objects(cls, session):
+        obj = await Manager.async_init(cls, session)
+        return obj
+        # return Manager(cls, session)
 
     @classmethod
     async def validate_unique_name_location(cls, db, name, location, id=None):

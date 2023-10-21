@@ -25,9 +25,10 @@ router = APIRouter()
 async def list(request: Request, token: str = Depends(Protect), db: AsyncSession = Depends(get_async_db), commons: CommonDependencies = Depends(CommonDependencies)):
     token.auth(['admin', 'manager', 'user'])
     try:
-        r = await PlayerModel.objects(db).all(offset=commons.offset, limit=commons.size)
+        obj = await PlayerModel.objects(db)
+        result = await obj.all(offset=commons.offset, limit=commons.size)
         return {
-            'data': r,
+            'data': result,
             'page_size': commons.size,
             'next_page': int(commons.page) + 1
         }
@@ -43,7 +44,8 @@ list.__doc__ = f" List players".expandtabs()
 async def get(request: Request, player_id: str, db: AsyncSession = Depends(get_async_db), token: str = Depends(Protect)):
     token.auth(['admin', 'manager', 'user'])
     try:
-        result = await PlayerModel.objects(db).get(id=player_id)
+        obj = await PlayerModel.objects(db)
+        result = await obj.get(id=player_id)
         if result:
             return result
         else:
@@ -106,7 +108,8 @@ async def create(request: Request, player: CreatePlayer, db: AsyncSession = Depe
                 "well_known_urls": {"zeauth": zeauth_url, "self": str(request.base_url)}
             }
         }
-        new_player = await PlayerModel.objects(db).create(**kwargs)
+        obj = await PlayerModel.objects(db)
+        new_player = await obj.create(**kwargs)
         return new_player
     except HTTPException as e:
         raise e
@@ -137,7 +140,8 @@ async def create_multiple_players(request: Request, players: List[CreatePlayer],
                         "well_known_urls": {"zeauth": zeauth_url, "self": str(request.base_url)}
                     }
                 }
-                new_players = await PlayerModel.objects(db).create(only_add=True, **kwargs)
+                obj = await PlayerModel.objects(db)
+                new_players = await obj.create(only_add=True, **kwargs)
                 new_items.append(new_players)
             except HTTPException as e:
                 errors_info.append({"index": player_index, "errors": e.detail})
@@ -174,14 +178,19 @@ async def upsert_multiple_players(request: Request, players: List[UpsertPlayer],
                     }
                 }
                 if new_data['id']:
-                    old_data = await PlayerModel.objects(db).get(id=new_data['id'])
-                    kwargs['signal_data']['old_data'] = old_data.__dict__ if old_data else {}
+                    obj = await PlayerModel.objects(db)
+                    old_data = await obj.get(id=new_data['id'])
+                    kwargs['signal_data']['old_data'] = dict(old_data.__dict__) if old_data else {}
 
-                    await PlayerModel.objects(db).update(obj_id=new_data['id'], **kwargs)
-                    updated_deployments = await PlayerModel.objects(db).get(id=new_data['id'])
+                    obj = await PlayerModel.objects(db)
+                    updated_deployments = await obj.update(obj_id=new_data['id'], **kwargs)
+
+                    # obj = await PlayerModel.objects(db)
+                    # updated_deployments = await obj.get(id=new_data['id'])
                     new_items.append(updated_deployments)
                 else:
-                    new_players = await PlayerModel.objects(db).create(only_add=True, **kwargs)
+                    obj = await PlayerModel.objects(db)
+                    new_players = await obj.create(only_add=True, **kwargs)
                     new_items.append(new_players)
             except HTTPException as e:
                 errors_info.append({"index": player_index, "errors": e.detail})
@@ -204,19 +213,23 @@ upsert_multiple_players.__doc__ = f" upsert multiple players".expandtabs()
 async def update(request: Request, player_id: Union[str, int], player: CreatePlayer, db: AsyncSession = Depends(get_async_db), token: str = Depends(Protect)):
     token.auth(['admin', 'manager'])
     try:
-        old_data = await PlayerModel.objects(db).get(id=player_id)
+        obj = await PlayerModel.objects(db)
+        old_data = await obj.get(id=player_id)
         new_data = player.dict(exclude_unset=True)
         kwargs = {
             "model_data": new_data,
             "signal_data": {
                 "jwt": token.credentials,
                 "new_data": new_data,
-                "old_data": old_data.__dict__ if old_data else {},
+                "old_data": dict(old_data.__dict__) if old_data else {},
                 "well_known_urls": {"zeauth": zeauth_url, "self": str(request.base_url)}
             }
         }
-        await PlayerModel.objects(db).update(obj_id=player_id, **kwargs)
-        result = await PlayerModel.objects(db).get(id=player_id)
+        obj = await PlayerModel.objects(db)
+        result = await obj.update(obj_id=player_id, **kwargs)
+
+        # obj = await PlayerModel.objects(db)
+        # result = await obj.get(id=player_id)
         return result
     except HTTPException as e:
         raise e
@@ -234,16 +247,19 @@ update.__doc__ = f" Update a player by its id and payload".expandtabs()
 async def delete(request: Request, player_id: Union[str, int], db: AsyncSession = Depends(get_async_db), token: str = Depends(Protect)):
     token.auth(['manager'])
     try:
+        obj = await PlayerModel.objects(db)
+        old_data = await obj.get(id=player_id)
         kwargs = {
             "model_data": {},
             "signal_data": {
                 "jwt": token.credentials,
                 "new_data": {},
-                "old_data": {},
+                "old_data": dict(old_data.__dict__) if old_data else {},
                 "well_known_urls": {"zeauth": zeauth_url, "self": str(request.base_url)}
             }
         }
-        await PlayerModel.objects(db).delete(obj_id=player_id, **kwargs)
+        obj = await PlayerModel.objects(db)
+        await obj.delete(obj_id=player_id, **kwargs)
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail={
                 "field_name": "{player_id}",
@@ -269,6 +285,7 @@ async def delete_multiple_players(request: Request, players_id: List[str] = Quer
             "well_known_urls": {"zeauth": zeauth_url, "self": str(request.base_url)}
         }
     }
-    await PlayerModel.objects(db).delete_multiple(obj_ids=players_id, **kwargs)
+    obj = await PlayerModel.objects(db)
+    await obj.delete_multiple(obj_ids=players_id, **kwargs)
 
 delete.__doc__ = f" Delete multiple players by list of ids".expandtabs()

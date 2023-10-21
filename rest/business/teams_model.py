@@ -51,6 +51,8 @@ class TeamModel(BaseModel):
     players = relationship('PlayerModel', back_populates='team__details', lazy='subquery')
     
     @classmethod
-    def objects(cls, session):
-        return CustomManager(cls, session)
+    async def objects(cls, session):
+        obj = await CustomManager.async_init(cls, session)
+        return obj
+        # return CustomManager(cls, session)
 
