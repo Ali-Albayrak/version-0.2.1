@@ -183,10 +183,10 @@ async def upsert_multiple_players(request: Request, players: List[UpsertPlayer],
                     kwargs['signal_data']['old_data'] = old_data.__dict__ if old_data else {}
 
                     obj = await PlayerModel.objects(db)
-                    await obj.update(obj_id=new_data['id'], **kwargs)
+                    updated_deployments = await obj.update(obj_id=new_data['id'], **kwargs)
 
-                    obj = await PlayerModel.objects(db)
-                    updated_deployments = await obj.get(id=new_data['id'])
+                    # obj = await PlayerModel.objects(db)
+                    # updated_deployments = await obj.get(id=new_data['id'])
                     new_items.append(updated_deployments)
                 else:
                     obj = await PlayerModel.objects(db)
@@ -226,10 +226,10 @@ async def update(request: Request, player_id: Union[str, int], player: CreatePla
             }
         }
         obj = await PlayerModel.objects(db)
-        await obj.update(obj_id=player_id, **kwargs)
+        result = await obj.update(obj_id=player_id, **kwargs)
 
-        obj = await PlayerModel.objects(db)
-        result = await obj.get(id=player_id)
+        # obj = await PlayerModel.objects(db)
+        # result = await obj.get(id=player_id)
         return result
     except HTTPException as e:
         raise e

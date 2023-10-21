@@ -81,7 +81,11 @@ class Manager:
         model_data = kwargs.get("model_data", {})
         if kwargs.get("signal_data"):
             model_data.update(await self.pre_update(**kwargs["signal_data"]))
-        await self.db.execute(update(self.Model).filter(self.Model.id == obj_id).values(model_data))
+        statement = update(self.Model)\
+                    .filter(self.Model.id == obj_id)\
+                    .values(model_data)\
+                    .returning(self.Model.__table__)
+        updated_row = await self.db.execute(statement)
         await self.db.commit()
         try:
             if kwargs.get("signal_data"):
@@ -89,6 +93,7 @@ class Manager:
                 await self.post_update(**kwargs["signal_data"])
         except Exception as e:
             log.debug(e)
+        return updated_row
 
     async def delete(self, obj_id, **kwargs):
         is_delete = True
