@@ -10,13 +10,13 @@ from core.encryptStr import EncryptStr
 
 
 # select enums
-class CloudProviderEnum(Optional[str] = Field(default=None), enum.Enum):
+class CloudProviderEnum(str , enum.Enum):
     GCP = "GCP"
     AWS = "AWS"
     AZURE = "AZURE"
     ONPREM = "ONPREM"
 # select enums
-class KindEnum(Optional[str] = Field(default=None), enum.Enum):
+class KindEnum(str, enum.Enum):
     dev = "dev"
     prod = "prod"
 

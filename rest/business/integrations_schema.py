@@ -10,7 +10,7 @@ from core.encryptStr import EncryptStr
 
 
 # select enums
-class TypeEnum(Optional[str] = Field(default=None), enum.Enum):
+class TypeEnum(str, enum.Enum):
     github = "github"
     smtp = "smtp"
     ses = "ses"
@@ -66,7 +66,6 @@ class UpdateIntegration(BaseModel):
     name: Optional[str] = Field(default=None)
     type: Optional[TypeEnum]
     creds: str
-    provider: Optional[uuid.UUID] = Field(default=None)
 
     @validator('type')
     def validate_type(cls, type: Optional[TypeEnum]):

@@ -24,7 +24,7 @@ router = APIRouter()
 # list app_versions
 @router.get('/', tags=['app_versions'], status_code=HTTP_200_OK, summary="List app_versions", response_model=ReadApp_Versions)
 async def list(request: Request, token: str = Depends(Protect), db: AsyncSession = Depends(get_async_db), commons: CommonDependencies = Depends(CommonDependencies)):
-    token.auth(['zekoder-zestudio-app_versions-list', 'zekoder-zestudio-app_versions-get'])
+    token.auth(['zekoder-zestudio-app_version-list', 'zekoder-zestudio-app_version-get'])
     try:
         obj = await App_VersionModel.objects(db)
         result = await obj.all(offset=commons.offset, limit=commons.size)
@@ -43,7 +43,7 @@ list.__doc__ = f" List app_versions".expandtabs()
 # get app_version
 @router.get('/app_version_id', tags=['app_versions'], status_code=HTTP_200_OK, summary="Get app_version with ID", response_model=ReadApp_Version)
 async def get(request: Request, app_version_id: str, db: AsyncSession = Depends(get_async_db), token: str = Depends(Protect)):
-    token.auth(['zekoder-zestudio-app_versions-list', 'zekoder-zestudio-app_versions-get'])
+    token.auth(['zekoder-zestudio-app_version-list', 'zekoder-zestudio-app_version-get'])
     try:
         obj = await App_VersionModel.objects(db)
         result = await obj.get(id=app_version_id)

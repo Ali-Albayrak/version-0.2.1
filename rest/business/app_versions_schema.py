@@ -20,14 +20,14 @@ class CreateApp_Version(BaseModel):
     zdl: Optional[dict] = Field(default={})
     public: Optional[bool] = Field(default=False)
     description: Optional[str] = Field(default=None)
-    screenshots: Optional[List[Optional[uuid.UUID] = Field(default=None)]]
+    screenshots: Optional[List[Optional[uuid.UUID]]] = Field(default=None)
     notes: Optional[str] = Field(default=None)
     owner: Optional[uuid.UUID] = Field(default=None)
     app: Optional[uuid.UUID] = Field(default=None)
     is_sections: Optional[bool] = Field(default=False)
 
     @validator('screenshots')
-    def validate_screenshots(cls, screenshots: Optional[List[Optional[uuid.UUID] = Field(default=None)]]):
+    def validate_screenshots(cls, screenshots: Optional[List[Optional[uuid.UUID]]] = Field(default=None)):
         if False or False or False:
             raise ValueError(f"field <screenshots> is not allowed")
         if screenshots and len(screenshots) > 5:
@@ -59,7 +59,7 @@ class ReadApp_Version(BaseModel):
     zdl: Optional[dict] = Field(default={})
     public: Optional[bool] = Field(default=False)
     description: Optional[str] = Field(default=None)
-    screenshots: Optional[List[Optional[uuid.UUID] = Field(default=None)]]
+    screenshots: Optional[List[Optional[uuid.UUID]]] = Field(default=None)
     notes: Optional[str] = Field(default=None)
     owner: Optional[uuid.UUID]
     app: Optional[uuid.UUID]
@@ -72,7 +72,7 @@ class ReadApp_Version(BaseModel):
     updated_on: datetime.datetime
 
     @validator('screenshots')
-    def validate_screenshots(cls, screenshots: Optional[List[Optional[uuid.UUID] = Field(default=None)]]):
+    def validate_screenshots(cls, screenshots: Optional[List[Optional[uuid.UUID]]] = Field(default=None)):
         if screenshots and len(screenshots) > 5:
             raise ValueError(f"field <screenshots> cannot exceed 5 charachters")
         return screenshots
@@ -89,7 +89,7 @@ class UpdateApp_Version(BaseModel):
     zdl: Optional[dict] = Field(default={})
     public: Optional[bool] = Field(default=False)
     description: Optional[str] = Field(default=None)
-    screenshots: Optional[List[Optional[uuid.UUID] = Field(default=None)]]
+    screenshots: Optional[List[Optional[uuid.UUID]]] = Field(default=None)
     notes: Optional[str] = Field(default=None)
     owner: Optional[uuid.UUID] = Field(default=None)
     app: Optional[uuid.UUID] = Field(default=None)
@@ -97,7 +97,7 @@ class UpdateApp_Version(BaseModel):
     is_sections: Optional[bool] = Field(default=False)
 
     @validator('screenshots')
-    def validate_screenshots(cls, screenshots: Optional[List[Optional[uuid.UUID] = Field(default=None)]]):
+    def validate_screenshots(cls, screenshots: Optional[List[Optional[uuid.UUID]]] = Field(default=None)):
         if False or '__' in screenshots or screenshots in ['id']:
             raise ValueError(f"field <screenshots> is not allowed")
         if screenshots and len(screenshots) > 5:
