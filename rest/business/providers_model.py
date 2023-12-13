@@ -56,7 +56,8 @@ class ProviderModel(BaseModel):
         query = select(cls).where(cls.short_name==short_name)
         if id is not None:
             query = query.where(cls.id != id)
-        existing_record = query.first()
+        result = await db.execute(query)
+        existing_record = result.scalars().first()
         if existing_record:
             raise HTTPException(status_code=422, detail={
                 "field_name": "short_name",
