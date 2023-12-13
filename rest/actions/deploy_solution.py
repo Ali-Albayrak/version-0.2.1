@@ -5,17 +5,10 @@ def handler(
     well_known_urls: dict,
     method: str = ""
 ):
-    req_data = {
-      "name": str(new_data["name"]),
-      "short_name": str(new_data["short_name"]),
-      "position": "staff",
-      "is_active": True,
-      "team": str(new_data["id"]),
-    }
+    req_data = {"deployment_id": str(new_data["id"])}
     import requests
-    url=f"{well_known_urls['self']}players/"
+    url="http://zekoder-zeagent-operator-service.zestudio-dev.svc.cluster.local/deploy"
     AUTH_HEADERS = {
-        "Authorization": f"Bearer {jwt}",
         "accept": "application/json",
         "Content-Type": "application/json"
     }

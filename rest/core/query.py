@@ -62,7 +62,7 @@ class QuerySchema(BaseModel):
     count: Optional[int] = 1
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "project": ["string"],
                 "limit": 20,
@@ -105,27 +105,43 @@ class JSONQ:
         self.session = session
 
     def query(self, req: QuerySchema, allowed_aggregates: list[str]):
-        result, aggregates, count = None, None, None
-        if req.count:
-            count = MongoQuery(self.model).with_session(self.session).query(**req.dict(
-                by_alias=True,
-                exclude_none=True
-            )).end().first()
-        if req.aggregate:
-            aggregates_group = req.aggregate.get("group", [])
-            if aggregates_group:
-                del req.aggregate["group"]
-            aggregates = MongoQuery(self.model, MongoQuerySettingsDict(
-                aggregate_columns=allowed_aggregates,
-                aggregate_labels=True,
-            )).with_session(self.session).query(
-                filter=req.filter,
-                aggregate=req.aggregate,
-                group=aggregates_group
-            ).end().all()
-        query = req.dict(by_alias=True, exclude={"count", "aggregate"}, exclude_none=True)
         try:
-            result = MongoQuery(self.model).with_session(self.session).query(**query).end().all()
+            result, aggregates, data, count = None, None, None, None
+            # for aggregate actions.
+            if req.aggregate:
+                # let's get last element of the dict, we need that for success count
+                # We assume that last element should be count action and most usage for
+                # sql language it should be the last element in the query before FROM :)!
+                last_element_key, last_element_val = list(req.aggregate.items())[-1]
+                last_element = {last_element_key: last_element_val}
+                # Calculating COUNT in reg.aggregate
+                count = MongoQuery(self.model, MongoQuerySettingsDict(
+                    aggregate_columns=allowed_aggregates,
+                    aggregate_labels=True
+                )).with_session(self.session).query(
+                    filter=req.filter,
+                    aggregate=last_element,
+                ).end().first()[0]
+
+                # data for aggregate actions
+                data = MongoQuery(self.model, MongoQuerySettingsDict(
+                    aggregate_columns=allowed_aggregates,
+                    aggregate_labels=True,
+                )).with_session(self.session).query(
+                    filter=req.filter,
+                    aggregate=req.aggregate,
+                    group=req.group
+                ).end().all()
+
+            # for none aggregate actions
+            if not req.aggregate:
+                # if not aggregate then this is what we are going to do when getting cumulative count
+                count_query = req.dict(by_alias=True, exclude_none=True)
+                count = MongoQuery(self.model).with_session(self.session).query(**count_query).end().first()[0]
+                # we should move count if we want to get all rows
+                query = req.dict(by_alias=True, exclude={"count"}, exclude_none=True)
+                data = MongoQuery(self.model).with_session(self.session).query(**query).end().all()
+
         except InvalidColumnError as e:
             log.debug(e)
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail={
@@ -135,4 +151,4 @@ class JSONQ:
         except Exception as e:
             log.debug(e)
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Something went wrong")
-        return {"data": result, "aggregates": aggregates, "count": count[0] if count else count}
+        return {"data": data, "count": count if count else 0}

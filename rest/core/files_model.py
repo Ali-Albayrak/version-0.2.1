@@ -3,13 +3,13 @@ from datetime import datetime
 
 from sqlalchemy import Column, String, DATETIME, INTEGER
 from business import Base
-
+from sqlalchemy.dialects.postgresql import UUID
 
 class FilesModel(Base):
     __tablename__ = 'files'
     __table_args__ = {'schema': 'public'}
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = Column(UUID(as_uuid=True), primary_key=True, default=lambda: str(uuid.uuid4()))
     minio_address = Column(String, nullable=False)
     minio_thumbnail_address = Column(String)
     width = Column(INTEGER)
