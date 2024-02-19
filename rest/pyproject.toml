@@ -12,16 +12,13 @@ requests = "~2.28"
 
 # only when data section is there
 pydantic = {extras = ["email"], version = "^1.10.4"}
-sqlalchemy = '^1.2, !=1.2.9, < 1.4'
+SQLAlchemy = "^1.4"
 psycopg2-binary = "^2.9.3"
-mongosql = "^2.0.15.post1"
+mongosql = {git = "https://github.com/Ali-Albayrak/My-Mongosql.git"}
 dapr = "^1.8.3"
-
-[tool.poetry.group.test`]
-optional = true
-
-[tool.poetry.group.test.dependencies]
-pytest = "^5.2"
+asyncpg = "^0.28.0"
+httpx = "^0.25.0"
+python-dotenv = "^1.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

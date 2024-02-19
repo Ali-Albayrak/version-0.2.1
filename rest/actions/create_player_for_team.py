@@ -1,4 +1,4 @@
-def handler(
+async def handler(
     jwt: dict,
     new_data: dict,
     old_data: dict,
@@ -12,11 +12,13 @@ def handler(
       "is_active": True,
       "team": str(new_data["id"]),
     }
-    import requests
+    import httpx
     url=f"{well_known_urls['self']}players/"
     AUTH_HEADERS = {
         "Authorization": f"Bearer {jwt}",
         "accept": "application/json",
         "Content-Type": "application/json"
     }
-    return requests.post(url=url, json=req_data, headers=AUTH_HEADERS).json()
+    async with httpx.AsyncClient() as client:
+        res = await client.post(url=url,json=req_data,headers=AUTH_HEADERS)
+    return res

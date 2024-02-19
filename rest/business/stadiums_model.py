@@ -10,6 +10,8 @@ from sqlalchemy.orm import relationship
 from core.base_model import BaseModel
 from core.manager import Manager
 from fastapi import HTTPException
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import select
 
 
 
@@ -32,9 +34,9 @@ class StadiumModel(BaseModel):
             
     capacity = Column(Integer, nullable=True, default=None)
     
-    profile_image = Column(String, ForeignKey("public.files.id"))
+    profile_image = Column(UUID(as_uuid=True), ForeignKey("public.files.id"))
         
-    license_file = Column(String, ForeignKey("public.files.id"))
+    license_file = Column(UUID(as_uuid=True), ForeignKey("public.files.id"))
                 
     family = Column(JSON, nullable=True, default=None)
             
@@ -43,15 +45,18 @@ class StadiumModel(BaseModel):
     birthdate = Column(DATE, nullable=True, default=None)
 
     @classmethod
-    def objects(cls, session):
-        return Manager(cls, session)
+    async def objects(cls, session):
+        obj = await Manager.async_init(cls, session)
+        return obj
+        # return Manager(cls, session)
 
     @classmethod
-    def validate_unique_name_location(cls, db, name, location, id=None):
-        query = db.query(cls).filter_by(name=name, location=location)
+    async def validate_unique_name_location(cls, db, name, location, id=None):
+        query = select(cls).where(cls.name==name, cls.location==location)
         if id is not None:
-            query = query.filter(cls.id != id)
-        existing_record = query.first()
+            query = query.where(cls.id != id)
+        result = await db.execute(query)
+        existing_record = result.scalars().first()
         if existing_record:
             raise HTTPException(status_code=422, detail={
                 "field_name": "name_location",
